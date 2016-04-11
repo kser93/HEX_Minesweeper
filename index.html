@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HEX Minesweeper</title>
+</head>
+<body>
+    <img src="bomb.png" id=game-bomb style="display: none" />
+    <canvas id="game-canvas" width="800" height="800"></canvas>
+    <script src="js/lib/underscore.js"></script>
+    <script src="js/lib/backbone.js"></script>
+    <script src="js/lib/backbone.nativeview.js"></script>
+    <script>
+        Backbone.View = Backbone.NativeView;
+    </script>
+    <script src="js/components/cell/model.js"></script>
+    <script src="js/components/cell/view.js"></script>
+    <script src="js/components/field/model.js"></script>
+    <script src="js/components/field/view.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
