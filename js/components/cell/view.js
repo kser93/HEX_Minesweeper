@@ -1,26 +1,27 @@
 let CellView = Backbone.View.extend({
     model: CellModel,
     initialize: function (attrs) {
-        // console.log(attrs);
         this.ctx = attrs.ctx;
         this.radius = attrs.radius;
-        this.color = attrs.color;
+        this.state_dependent['close'].style = _.clone(attrs.style);
+        this.state_dependent['open'].style = _.extend(_.clone(attrs.style), {fillStyle: '#D4CCBC'});
         this.center = this._findCenter(this.model, this.ctx.center, this.radius);
         this.points = this._findPoints(this.center, this.radius, 0);
+
+        this.listenTo(
+            this.model,
+            'change:state',
+            () => {
+                this._updateStateDependent();
+                this.render();
+            }
+        );
         this._updateStateDependent();
-        this.listenTo(this.model, 'change:state', function(attr) {
-            console.log(attr);
-            this._updateStateDependent();
-            this.render();
-        }.bind(this));
-        // this.model.set('state', 'open');
-        return this;
     },
 
     render: function() {
-        this._drawHex(this.ctx, 'black', this.color);
+        this._drawHex(this.ctx, this.style);
         this.drawContent(this.ctx, this.center, this.radius);
-        return this;
     },
 
     _updateStateDependent: function() {
@@ -84,38 +85,33 @@ let CellView = Backbone.View.extend({
         return [p0, p1, p2, p3, p4, p5];
     },
 
-    _drawHex: function (ctx, lineColor, fillColor) {
-        // let points = this._findPoints(center, radius, angle);
-
+    _drawHex: function (ctx) {
         let styleContext = {
             fillStyle: ctx.fillStyle,
-            strokeStyle: ctx.strokeStyle
+            strokeStyle: ctx.strokeStyle,
+            lineWidth: ctx.lineWidth
         };
-        _.extend(ctx, {
-            fillStyle: fillColor,
-            strokeStyle: lineColor
-        });
+        Object.assign(ctx, this.style);
 
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
-        this.points.forEach(function (point) {
-            ctx.lineTo(point.x, point.y);
-        });
+        this.points.forEach(point => ctx.lineTo(point.x, point.y));
         ctx.closePath();
 
         ctx.fill();
         ctx.stroke();
 
-        _.extend(ctx, styleContext);
+        Object.assign(ctx, styleContext);
     },
 
     state_dependent: {
         close: {
+            style: undefined,
             drawContent: function() {}
         },
 
         open: {
-            color: 'white',
+            style: undefined,
             drawContent: function() {
                 if (this.model.get('isBomb')) {
                     this.ctx.drawImage(
@@ -128,40 +124,17 @@ let CellView = Backbone.View.extend({
                     this.model.trigger('bomb', this.model);
                 }
                 else {
-                    let sections = this.model.get('neighbours').where({isBomb: true}).length;
-                    if (sections) {
-                        this._drawSections(sections);
+                    let bombs = this.model.get('neighbours').where({isBomb: true}).length;
+                    if (bombs) {
+                        this.ctx.font = this.radius + 'px Times New Roman';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'middle';
+                        this.ctx.fillText(bombs, this.center.x, this.center.y);
                     }
                     else {
                         this.model.trigger('notbomb', this.model);
                     }
                 }
-            },
-
-            _drawSections: function (sections) {
-                let sectionColors = ['#C47F7F', '#C46262', '#C44E4E', '#C43B3B', '#C42727', '#C40000'];
-                let _points = this.points.concat(this.points[0]);
-
-                let styleContext = {
-                    fillStyle: ctx.fillStyle,
-                    strokeStyle: ctx.strokeStyle
-                };
-
-                for (let i = 0; i < sections; ++i) {
-                    _.extend(ctx, {
-                        fillStyle: sectionColors[i],
-                        strokeStyle: 'black'
-                    });
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.center.x, this.center.y);
-                    [_points[i], _points[i+1]].forEach(function (point) {
-                        this.ctx.lineTo(point.x, point.y);
-                    }.bind(this));
-                    this.ctx.closePath();
-                    this.ctx.fill();
-                    this.ctx.stroke();
-                }
-                _.extend(ctx, styleContext);
             }
         }
     }

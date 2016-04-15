@@ -1,0 +1,7 @@
+body {
+    display: flex;
+}
+
+canvas#game-canvas {
+    margin: auto;
+}

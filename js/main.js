@@ -5,8 +5,12 @@ ctx.center = {
     y: ctx.canvas.clientHeight / 2
 };
 var a = new FieldView({
-    model: new FieldModel,
+    model: new FieldModel({layers: 10, bombs: 50}),
     ctx: ctx,
     radius: 50,
-    layerColors: ['#8778C4', '#78C4AD', '#C4788F', '#B5C478', '#78AEC4']
+    style: {
+        fillStyle: '#ffaa00',
+        strokeStyle: '#991C30',
+        lineWidth: 1
+    }
 });
