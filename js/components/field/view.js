@@ -13,8 +13,7 @@ let FieldView = Backbone.View.extend({
                 let cellView = new CellView({
                         model: cell,
                         ctx: attrs.ctx,
-                        radius: this.radius,
-                        style: attrs.style
+                        radius: this.radius
                     });
                 cellViews.push(cellView);
             }
@@ -24,7 +23,7 @@ let FieldView = Backbone.View.extend({
         this.listenTo(
             this.model.get('cells'),
             'notbomb',
-            cell => _.invoke(cell.get('neighbours').where({state: 'close'}), 'set', {state: 'open'})
+            cell => _.invoke(cell.get('neighbours').where({state: 'hidden'}), 'set', {state: 'opened'})
         );
         this.listenTo(
             this.model.get('cells'),
@@ -43,11 +42,31 @@ let FieldView = Backbone.View.extend({
 
     clickHandler: function (e) {
         let target = this._findCell(e);
-
-        if (target && target.get('state') == 'close') {
-            target.set('state', 'open');
+        if (!target) {
+            console.log(target);
+            return;
         }
-        let notbombs = this.model.get('cells').where({state: 'close', isBomb: false}).length;
+        console.log(e);
+
+        let action = e.altKey ? 'flag' : 'open';
+        let handlerActions = {
+            hidden: {
+                flag: () => target.set('state', 'flagged'),
+                open: () => target.set('state', 'opened')
+            },
+            flagged: {
+                flag: () => target.set('state', 'hidden'),
+                open: () => null
+            },
+            opened: {
+                flag: () => null,
+                open: () => null
+            }
+        };
+        handlerActions[target.get('state')][action]();
+        let notbombs = this.model.get('cells').filter(
+            cell => cell.get('state') != 'opened' && cell.get('isBomb') == false
+        ).length;
         if (!notbombs) {
             this.undelegateEvents();
             alert('You won!');
@@ -93,7 +112,9 @@ let FieldView = Backbone.View.extend({
             x: (leftBoundaries.left + leftBoundaries.right + (3 - pointSelector) % 3) / 3,
             y: pointY[pointNames[pointSelector]]
         };
-
+        // console.log(
+        //     this.model.get('cells').get(JSON.stringify(coords))
+        // );
         return this.model.get('cells').get(JSON.stringify(coords));
     }
 });

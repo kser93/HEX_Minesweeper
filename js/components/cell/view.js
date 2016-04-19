@@ -3,8 +3,8 @@ let CellView = Backbone.View.extend({
     initialize: function (attrs) {
         this.ctx = attrs.ctx;
         this.radius = attrs.radius;
-        this.state_dependent['close'].style = _.clone(attrs.style);
-        this.state_dependent['open'].style = _.extend(_.clone(attrs.style), {fillStyle: '#D4CCBC'});
+        // this.state_dependent['hidden'].style = _.clone(attrs.style);
+        // this.state_dependent['opened'].style = _.extend(_.clone(attrs.style), {fillStyle: '#D4CCBC'});
         this.center = this._findCenter(this.model, this.ctx.center, this.radius);
         this.points = this._findPoints(this.center, this.radius, 0);
 
@@ -20,7 +20,7 @@ let CellView = Backbone.View.extend({
     },
 
     render: function() {
-        this._drawHex(this.ctx, this.style);
+        this._drawHex(this.ctx);
         this.drawContent(this.ctx, this.center, this.radius);
     },
 
@@ -86,12 +86,9 @@ let CellView = Backbone.View.extend({
     },
 
     _drawHex: function (ctx) {
-        let styleContext = {
-            fillStyle: ctx.fillStyle,
-            strokeStyle: ctx.strokeStyle,
-            lineWidth: ctx.lineWidth
-        };
+        ctx.save();
         Object.assign(ctx, this.style);
+
 
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -101,17 +98,39 @@ let CellView = Backbone.View.extend({
         ctx.fill();
         ctx.stroke();
 
-        Object.assign(ctx, styleContext);
+        ctx.restore();
     },
 
     state_dependent: {
-        close: {
-            style: undefined,
+        hidden: {
+            style: {
+                fillStyle: '#ffaa00',
+                strokeStyle: '#991C30'
+            },
             drawContent: function() {}
         },
 
-        open: {
-            style: undefined,
+        flagged: {
+            style: {
+                fillStyle: '#ffaa00',
+                strokeStyle: '#991C30'
+            },
+            drawContent: function() {
+                this.ctx.drawImage(
+                    document.getElementById('game-flag'),
+                    this.center.x - this.radius,
+                    this.center.y - this.radius,
+                    2*this.radius,
+                    2*this.radius
+                );
+            }
+        },
+
+        opened: {
+            style: {
+                fillStyle: '#D4CCBC',
+                strokeStyle: '#991C30'
+            },
             drawContent: function() {
                 if (this.model.get('isBomb')) {
                     this.ctx.drawImage(
@@ -126,10 +145,14 @@ let CellView = Backbone.View.extend({
                 else {
                     let bombs = this.model.get('neighbours').where({isBomb: true}).length;
                     if (bombs) {
-                        this.ctx.font = this.radius + 'px Times New Roman';
-                        this.ctx.textAlign = 'center';
-                        this.ctx.textBaseline = 'middle';
+                        this.ctx.save();
+                        Object.assign(this.ctx, {
+                            font: this.radius + 'px sans-serif',
+                            textAlign: 'center',
+                            textBaseline: 'middle'
+                        });
                         this.ctx.fillText(bombs, this.center.x, this.center.y);
+                        this.ctx.restore();
                     }
                     else {
                         this.model.trigger('notbomb', this.model);

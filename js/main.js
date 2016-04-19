@@ -7,10 +7,5 @@ ctx.center = {
 var a = new FieldView({
     model: new FieldModel({layers: 10, bombs: 50}),
     ctx: ctx,
-    radius: 50,
-    style: {
-        fillStyle: '#ffaa00',
-        strokeStyle: '#991C30',
-        lineWidth: 1
-    }
+    radius: 50
 });

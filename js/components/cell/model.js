@@ -6,9 +6,9 @@ let CellModel = Backbone.Model.extend({
         coords: {x: 0, y: 0},
         id: JSON.stringify({x: 0, y: 0}),
         isBomb: false,
-        state: 'close'
+        state: 'hidden'
     },
-    states: ['close', 'open'],
+    states: ['hidden', 'opened'],
 
     initialize: function(attrs) {
         let index = this.get('index');
